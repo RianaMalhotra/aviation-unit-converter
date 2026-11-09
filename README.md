@@ -20,15 +20,6 @@ A small aviation-focused web project to make common unit conversions easier to e
 
 All conversions run locally in the browser. Speed, distance, altitude, and pressure use unit factors relative to a common base; temperature uses the appropriate offset-and-scale formulas. No user data is sent to a server.
 
-## Run locally
-
-Download or clone this repository and open `index.html` in a browser. External Google Fonts are optional; system-font fallbacks are provided.
-
-## GitHub Pages
-
-In **Settings → Pages → Build and deployment**, select **Deploy from a branch**, then **main** and **/(root)**. After Pages is enabled, the expected URL is:
-
-https://RianaMalhotra.github.io/aviation-unit-converter/
 
 ## Accuracy and limitations
 
