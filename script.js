@@ -66,8 +66,108 @@ $('copy').addEventListener('click',async () => {
   try {
     await navigator.clipboard.writeText(value);
     $('copy').textContent = '✓ Copied';
-    setTimeout(() => $('copy').textContent = '⧉ Copy result',1500);
+    setTimeout(() => $('copy').textContent = 'Copy result ↗',1500);
   } catch { $('toValue').select(); }
 });
 $('year').textContent = new Date().getFullYear();
 setup('speed');
+
+
+// Independent four-function calculator. Expressions are parsed without eval.
+let expression = '';
+let lastAnswer = 0;
+let justEvaluated = false;
+function calculate(text) {
+  const tokens = text.match(/(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?|[+*/()%\-]/gi) || [];
+  if (tokens.join('') !== text.replace(/\s/g,'')) throw Error('Invalid expression');
+  let pos = 0;
+  function primary() {
+    const t = tokens[pos++];
+    if (t === '-') return -primary();
+    if (t === '+') return primary();
+    if (t === '(') {
+      const n = sum();
+      if (tokens[pos++] !== ')') throw Error('Unclosed bracket');
+      return n;
+    }
+    if (!t || !/^(?:\d|\.)/.test(t)) throw Error('Invalid number');
+    return Number(t);
+  }
+  function product() {
+    let n = primary();
+    while (tokens[pos] === '*' || tokens[pos] === '/' || tokens[pos] === '%') {
+      const op = tokens[pos++];
+      const rhs = primary();
+      n = op === '*' ? n * rhs : op === '/' ? n / rhs : n * rhs / 100;
+    }
+    return n;
+  }
+  function sum() {
+    let n = product();
+    while (tokens[pos] === '+' || tokens[pos] === '-') {
+      const op = tokens[pos++];
+      const rhs = product();
+      n = op === '+' ? n + rhs : n - rhs;
+    }
+    return n;
+  }
+  const result = sum();
+  if (pos !== tokens.length || !Number.isFinite(result)) throw Error('Invalid calculation');
+  return result;
+}
+function calcFormat(n) {
+  return Number.isFinite(n) ? String(Number(n.toPrecision(11))) : 'Error';
+}
+function updateCalculator() {
+  $('calcExpression').textContent = expression || '0';
+  if (!expression) { $('calcDisplay').textContent = '0'; return; }
+  try {
+    $('calcDisplay').textContent = calcFormat(calculate(expression));
+  } catch {
+    $('calcDisplay').textContent = '…';
+  }
+}
+function calcKey(key) {
+  if (key === 'clear') { expression = ''; justEvaluated = false; updateCalculator(); return; }
+  if (key === 'back') { expression = expression.slice(0,-1); justEvaluated = false; updateCalculator(); return; }
+  if (key === 'sign') {
+    try { expression = String(-calculate(expression)); } catch { expression = expression ? '-(' + expression + ')' : '-'; }
+    justEvaluated = false; updateCalculator(); return;
+  }
+  if (key === '=') {
+    try {
+      lastAnswer = calculate(expression);
+      expression = calcFormat(lastAnswer);
+      justEvaluated = true;
+      updateCalculator();
+    } catch { $('calcDisplay').textContent = 'Error'; }
+    return;
+  }
+  if (!/^[0-9.+*/%\-]$/.test(key) || expression.length >= 80) return;
+  if (justEvaluated && /[0-9.]/.test(key)) expression = '';
+  justEvaluated = false;
+  if (/[+*/]/.test(key) && (!expression || /[+*/.\-]$/.test(expression))) return;
+  if (key === '.' && /(?:^|[+*/%\-])\d*\.\d*$/.test(expression)) return;
+  expression += key;
+  updateCalculator();
+}
+$('calcKeys').addEventListener('click',event => {
+  const button = event.target.closest('button[data-key]');
+  if (button) calcKey(button.dataset.key);
+});
+document.addEventListener('keydown',event => {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.target.matches('input, select, textarea, button')) return;
+  const key = event.key === 'Enter' ? '=' : event.key === 'Escape' ? 'clear' : event.key === 'Backspace' ? 'back' : event.key;
+  if (/^[0-9.+*/%\-=]$/.test(key) || ['clear','back'].includes(key)) {
+    event.preventDefault(); calcKey(key);
+  }
+});
+$('useResult').addEventListener('click',() => {
+  try {
+    const n = calculate(expression);
+    $('fromValue').value = String(Number(n.toPrecision(11)));
+    refresh();
+    document.getElementById('converter').scrollIntoView({behavior:'smooth',block:'start'});
+  } catch { $('calcDisplay').textContent = 'Error'; }
+});

@@ -1,8 +1,8 @@
 # AeroCalc ✈️
 
-A lightweight, responsive **aviation unit converter** built with HTML, CSS, and vanilla JavaScript. A small, cockpit-inspired utility for quick reference and aviation study, with no backend, login, or build step.
+A sleek, responsive **aviation calculator and unit converter** built with HTML, CSS, and vanilla JavaScript. A small, cockpit-inspired utility for quick reference and aviation study, with no backend, login, or build step.
 
-## What it does
+## What it does\n\n- **Calculator:** standard arithmetic with on-screen keypad, keyboard input, percentage, sign toggle, clear and backspace; transfer results to the unit converter.
 
 - **Speed:** knots, km/h, mph, m/s
 - **Distance:** nautical miles, kilometers, statute miles, meters
